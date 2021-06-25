@@ -51,14 +51,14 @@ router.get('/:netName?/info', async function (req, res) {
 		useNetwork(req.params.netName, res)
 		console.log('getting all variable information...')
 		//read data from ZapMaster's contract
-		var _stakerCount = await ZapMaster.methods.getUintVar(web3.utils.keccak256("_STAKE_COUNT")).call();
-		var _difficulty = await ZapMaster.methods.getUintVar(web3.utils.keccak256("_DIFFICULTY")).call();
-		var _currentRequestId = await ZapMaster.methods.getUintVar(web3.utils.keccak256("_CURRENT_REQUESTID")).call();
-		var _disputeCount = await ZapMaster.methods.getUintVar(web3.utils.keccak256("_DISPUTE_COUNT")).call();
-		var _totalSupply = await ZapMaster.methods.getUintVar(web3.utils.keccak256("_TOTAL_SUPPLY")).call();
-		var _timeOfLastValue = await ZapMaster.methods.getUintVar(web3.utils.keccak256("_TIME_OF_LAST_NEW_VALUE")).call();
-		var _requestCount = await ZapMaster.methods.getUintVar(web3.utils.keccak256("_REQUEST_COUNT")).call();
-		var _slotProgress = await ZapMaster.methods.getUintVar(web3.utils.keccak256("_SLOT_PROGRESS")).call();
+		var _stakerCount = await ZapMaster.methods.getUintVar(web3.utils.keccak256("stakerCount")).call();
+		var _difficulty = await ZapMaster.methods.getUintVar(web3.utils.keccak256("difficulty")).call();
+		var _currentRequestId = await ZapMaster.methods.getUintVar(web3.utils.keccak256("currentRequestId")).call();
+		var _disputeCount = await ZapMaster.methods.getUintVar(web3.utils.keccak256("disputeCount")).call();
+		var _totalSupply = await ZapMaster.methods.getUintVar(web3.utils.keccak256("total_supply")).call();
+		var _timeOfLastValue = await ZapMaster.methods.getUintVar(web3.utils.keccak256("timeOfLastNewValue")).call();
+		var _requestCount = await ZapMaster.methods.getUintVar(web3.utils.keccak256("requestCount")).call();
+		var _slotProgress = await ZapMaster.methods.getUintVar(web3.utils.keccak256("slotProgress")).call();
 		res.send({
 			stakerCount: _stakerCount,
 			difficulty: _difficulty,
