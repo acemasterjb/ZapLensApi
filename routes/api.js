@@ -45,12 +45,12 @@ function processInput(filename, json) {
 	});
 }
 
-// Get general Tellor state data and saves the data under data/state.json
+// Get general ZapMaster state data and saves the data under data/state.json
 router.get('/:netName?/info', async function (req, res) {
 	try {
 		useNetwork(req.params.netName, res)
 		console.log('getting all variable information...')
-		//read data from Tellor's contract
+		//read data from ZapMaster's contract
 		var _stakerCount = await ZapMaster.methods.getUintVar(web3.utils.keccak256("_STAKE_COUNT")).call();
 		var _difficulty = await ZapMaster.methods.getUintVar(web3.utils.keccak256("_DIFFICULTY")).call();
 		var _currentRequestId = await ZapMaster.methods.getUintVar(web3.utils.keccak256("_CURRENT_REQUESTID")).call();
