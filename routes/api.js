@@ -2,26 +2,27 @@ const express = require('express')
 const router = express.Router();
 var Web3 = require('web3');
 var fs = require('fs');
-var web3, tellorMaster, tellorMaster, tellorLens
+var web3, ZapMaster, ZapMaster, Aggregator
 
 function useNetwork(netName, res) {
 	// "Web3.providers.givenProvider" will be set if in an Ethereum supported browser.
 	try {
 		console.log(process.cwd())
-		const masterABI = JSON.parse(fs.readFileSync("contracts/tellorMaster.json"));
-		const lensABI = JSON.parse(fs.readFileSync("contracts/tellorLens.json"));
+		const masterABI = JSON.parse(fs.readFileSync("contracts/ZapMaster.json"));
+		const lensABI = JSON.parse(fs.readFileSync("contracts/Aggregator.json"));
+		var currentProvider = new Web3.providers.HttpProvider('https://data-seed-prebsc-1-s1.binance.org:8545/')
 
 		switch (netName) {
-			case "rinkeby":
-				web3 = new Web3(process.env.nodeURLRinkeby || Web3.givenProvider);
-				tellorMaster = new web3.eth.Contract(masterABI, '0x88dF592F8eb5D7Bd38bFeF7dEb0fBc02cf3778a0');
-				tellorLens = new web3.eth.Contract(lensABI, '0xebEF7ceB7C43850898e258be0a1ea5ffcdBc3205');
+			case "testnet":
+				web3 = new Web3(currentProvider);
+				ZapMaster = new web3.eth.Contract(masterABI, '0xBB1EbB02C6fD085B29f51a4817AA82030f17A3D6');
+				Aggregator = new web3.eth.Contract(lensABI, '0xD2d710c0fA58dc1d1433d0D175FFCFc77eBdC61F');
 				break;
 			default:
 				netName = "mainnet"
-				web3 = new Web3(process.env.nodeURL || Web3.givenProvider);
-				tellorMaster = new web3.eth.Contract(masterABI, '0x88dF592F8eb5D7Bd38bFeF7dEb0fBc02cf3778a0');
-				tellorLens = new web3.eth.Contract(lensABI, '0x577417CFaF319a1fAD90aA135E3848D2C00e68CF');
+				web3 = new Web3(currentProvider);
+				ZapMaster = new web3.eth.Contract(masterABI, '0xBB1EbB02C6fD085B29f51a4817AA82030f17A3D6');
+				Aggregator = new web3.eth.Contract(lensABI, '0xD2d710c0fA58dc1d1433d0D175FFCFc77eBdC61F');
 		}
 		console.log("using network:", netName)
 	} catch (e) {
@@ -50,14 +51,14 @@ router.get('/:netName?/info', async function (req, res) {
 		useNetwork(req.params.netName, res)
 		console.log('getting all variable information...')
 		//read data from Tellor's contract
-		var _stakerCount = await tellorMaster.methods.getUintVar(web3.utils.keccak256("_STAKE_COUNT")).call();
-		var _difficulty = await tellorMaster.methods.getUintVar(web3.utils.keccak256("_DIFFICULTY")).call();
-		var _currentRequestId = await tellorMaster.methods.getUintVar(web3.utils.keccak256("_CURRENT_REQUESTID")).call();
-		var _disputeCount = await tellorMaster.methods.getUintVar(web3.utils.keccak256("_DISPUTE_COUNT")).call();
-		var _totalSupply = await tellorMaster.methods.getUintVar(web3.utils.keccak256("_TOTAL_SUPPLY")).call();
-		var _timeOfLastValue = await tellorMaster.methods.getUintVar(web3.utils.keccak256("_TIME_OF_LAST_NEW_VALUE")).call();
-		var _requestCount = await tellorMaster.methods.getUintVar(web3.utils.keccak256("_REQUEST_COUNT")).call();
-		var _slotProgress = await tellorMaster.methods.getUintVar(web3.utils.keccak256("_SLOT_PROGRESS")).call();
+		var _stakerCount = await ZapMaster.methods.getUintVar(web3.utils.keccak256("_STAKE_COUNT")).call();
+		var _difficulty = await ZapMaster.methods.getUintVar(web3.utils.keccak256("_DIFFICULTY")).call();
+		var _currentRequestId = await ZapMaster.methods.getUintVar(web3.utils.keccak256("_CURRENT_REQUESTID")).call();
+		var _disputeCount = await ZapMaster.methods.getUintVar(web3.utils.keccak256("_DISPUTE_COUNT")).call();
+		var _totalSupply = await ZapMaster.methods.getUintVar(web3.utils.keccak256("_TOTAL_SUPPLY")).call();
+		var _timeOfLastValue = await ZapMaster.methods.getUintVar(web3.utils.keccak256("_TIME_OF_LAST_NEW_VALUE")).call();
+		var _requestCount = await ZapMaster.methods.getUintVar(web3.utils.keccak256("_REQUEST_COUNT")).call();
+		var _slotProgress = await ZapMaster.methods.getUintVar(web3.utils.keccak256("_SLOT_PROGRESS")).call();
 		res.send({
 			stakerCount: _stakerCount,
 			difficulty: _difficulty,
@@ -103,7 +104,7 @@ router.get('/:netName?/price/:requestID/:count?', async function (req, res) {
 		var reqID = req.params.requestID
 		console.log('getting last', reqCount, 'prices for request ID', reqID);
 
-		var r = await tellorLens.methods.getLastValues(reqID, reqCount).call()
+		var r = await Aggregator.methods.getLastValues(reqID, reqCount).call()
 		var results = [];
 		for (let index = 0; index < r.length; index++) {
 			results.push({
@@ -130,7 +131,7 @@ router.get('/:netName?/prices/:count?', async function (req, res) {
 
 		console.log('getting last', reqCount, 'prices for for all data IDs');
 
-		var r = await tellorLens.methods.getLastValuesAll(reqCount).call()
+		var r = await Aggregator.methods.getLastValuesAll(reqCount).call()
 		var results = [];
 		for (let index = 0; index < r.length; index++) {
 			if (+r[index].value != 0) {
@@ -156,7 +157,7 @@ router.get('/:netName?/dispute/:disputeID', async function (req, res) {
 	try {
 		useNetwork(req.params.netName, res)
 		console.log('getting dispute info...', req.params.disputeID);
-		var _returned = await tellorMaster.methods.getAllDisputeVars(req.params.disputeID).call();
+		var _returned = await ZapMaster.methods.getAllDisputeVars(req.params.disputeID).call();
 		res.send({
 			hash: _returned[0],
 			executed: _returned[1],
@@ -188,7 +189,7 @@ router.get('/:netName?/requestq', async function (req, res) {
 	try {
 		useNetwork(req.params.netName, res)
 		console.log('getting requestq...');
-		var _returned = await tellorMaster.methods.getRequestQ().call();
+		var _returned = await ZapMaster.methods.getRequestQ().call();
 		res.send({
 			requestq: _returned
 		})
@@ -203,7 +204,7 @@ router.get('/:netName?/requestinfo/:requestID', async function (req, res) {
 	try {
 		useNetwork(req.params.netName, res)
 		console.log('getting requestID information...', req.params.requestID);
-		var _returned = await tellorMaster.methods.getRequestVars(req.params.requestID).call();
+		var _returned = await ZapMaster.methods.getRequestVars(req.params.requestID).call();
 		res.send({
 			requestQPosition: _returned[0],
 			totalTip: _returned[1],
@@ -219,7 +220,7 @@ router.get('/:netName?/requestinfo/:requestID', async function (req, res) {
 router.get('/:netName?/currentVariables', async function (req, res) {
 	try {
 		useNetwork(req.params.netName, res)
-		let variables = await tellorMaster.methods.getNewCurrentVariables().call();
+		let variables = await ZapMaster.methods.getCurrentVariables().call();
 		res.send({ variables })
 	} catch (e) {
 		let err = e.message
@@ -230,7 +231,7 @@ router.get('/:netName?/currentVariables', async function (req, res) {
 router.get('/:netName?/getDisputeFee', async function (req, res) {
 	try {
 		useNetwork(req.params.netName, res)
-		let disputeFee = await tellorMaster.methods.getUintVar(web3.utils.keccak256('_DISPUTE_FEE')).call();
+		let disputeFee = await ZapMaster.methods.getUintVar(web3.utils.keccak256('_DISPUTE_FEE')).call();
 		res.send({ disputeFee })
 	} catch (e) {
 		let err = e.message
@@ -241,7 +242,7 @@ router.get('/:netName?/getDisputeFee', async function (req, res) {
 router.get('/:netName?/getMiners/:requestID/:timestamp', async function (req, res) {
 	try {
 		useNetwork(req.params.netName, res)
-		let data = await tellorMaster.methods.getMinersByRequestIdAndTimestamp(req.params.requestID, req.params.timestamp).call();
+		let data = await ZapMaster.methods.getMinersByRequestIdAndTimestamp(req.params.requestID, req.params.timestamp).call();
 		res.send(data)
 	} catch (e) {
 		let err = e.message
@@ -253,7 +254,7 @@ router.get('/:netName?/getMiners/:requestID/:timestamp', async function (req, re
 router.get('/:netName?/getStakerInfo/:address', async function (req, res) {
 	try {
 		useNetwork(req.params.netName, res)
-		var resp = await tellorMaster.methods.getStakerInfo(req.params.address).call();
+		var resp = await ZapMaster.methods.getStakerInfo(req.params.address).call();
 		res.send({
 			status: resp[0],
 			stakeDate: resp[1],
