@@ -13,10 +13,15 @@ function useNetwork(netName, res) {
 		var currentProvider = new Web3.providers.HttpProvider('https://data-seed-prebsc-1-s1.binance.org:8545/')
 
 		switch (netName) {
+			case "localhost":
+				web3 = new Web3(currentProvider);
+				ZapMaster = new web3.eth.Contract(masterABI, '0x2Aa47ebfc8D05866242a2a83ea9Be994Ae3E59a8');
+				Aggregator = new web3.eth.Contract(lensABI, '0xa5543465883092C825D12698473838B50d84639f');
+				break;
 			case "testnet":
 				web3 = new Web3(currentProvider);
-				ZapMaster = new web3.eth.Contract(masterABI, '0xBB1EbB02C6fD085B29f51a4817AA82030f17A3D6');
-				Aggregator = new web3.eth.Contract(lensABI, '0xD2d710c0fA58dc1d1433d0D175FFCFc77eBdC61F');
+				ZapMaster = new web3.eth.Contract(masterABI, '0xf8349760504C20cD1A454041F1B11e6B51Db2ca7');
+				Aggregator = new web3.eth.Contract(lensABI, '0x993C1EE9058186133974AA6e865E3Fe2D2A2B521');
 				break;
 			default:
 				netName = "mainnet"
