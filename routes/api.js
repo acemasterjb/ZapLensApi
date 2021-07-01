@@ -205,9 +205,18 @@ router.get('/:netName?/requestinfo/:requestID', async function (req, res) {
 		useNetwork(req.params.netName, res)
 		console.log('getting requestID information...', req.params.requestID);
 		var _returned = await ZapMaster.methods.getRequestVars(req.params.requestID).call();
+		var totalCount = await ZapMaster.methods.getNewValueCountbyRequestId(req.params.requestID).call();
+		var ts = await ZapMaster.methods.getTimestampbyRequestIDandIndex(req.params.requestID, totalCount - 1).call();
+		var value = await ZapMaster.methods.retrieveData(req.params.requestID, ts).call();
 		res.send({
-			requestQPosition: _returned[0],
-			totalTip: _returned[1],
+			queryString: _returned[0],
+			dataSymbol: _returned[1],
+			queryHash: _returned[2],
+			granularity: _returned[3],
+			requestQPosition: _returned[4],
+			totalTip: _returned[5],
+			timestamp: ts,
+			value: value,
 		})
 	} catch (e) {
 		let err = e.message
