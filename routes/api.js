@@ -141,7 +141,7 @@ router.get('/:netName?/prices/:count?', async function (req, res) {
 		for (let index = 0; index < r.length; index++) {
 			if (+r[index].value != 0) {
 				var ts = r[index].timestamp;
-				var reqID = r[index].meta.id;
+				var reqID = r[index].id;
 				var minedBlock = await ZapMaster.methods.getMinedBlockNum(reqID, ts).call();
 				results.push({
 					timestamp: r[index].timestamp,
